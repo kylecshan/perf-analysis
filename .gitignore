@@ -1,3 +1,5 @@
 *.json
 *.bz2
 *.html
+.ipynb_checkpoints/
+__pycache__/
