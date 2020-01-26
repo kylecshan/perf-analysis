@@ -26,7 +26,7 @@ def batchCusum(x, mean, std, min_shift = .5, max_influence = 4):
     # Final statistic is max of Cp and Cn
     return np.maximum(Cp, Cn)
 
-def cusum(x, startup = 10, threshold=6, verbose=False):
+def cusum(x, startup = 10, threshold=6, max_influence=4, verbose=False):
     """Apply CUSUM algorithm after each new data point
     x: 1D np.array with at least (startup) points
     startup: number of points to bootstrap initial std guess
@@ -50,10 +50,10 @@ def cusum(x, startup = 10, threshold=6, verbose=False):
     j = i+1
     while j < n:
         # Estimate variance of current regime
-        stdEsts[j] = weightedStd(preStd, preWt, x[i:j])
+        stdEsts[j] = weightedStd(2*preStd, preWt, x[i:j])
         
         # Calculate CUSUM stat and check if it's over the threshold
-        batchOutput = batchCusum(x[i:j], np.median(x[i:j]), stdEsts[j])
+        batchOutput = batchCusum(x[i:j], np.median(x[i:j]), stdEsts[j], max_influence=max_influence)
         cusumStats[-1][j] = batchOutput[-1]
         if verbose: 
             print('idx: %d | CUSUM: %f | std: %f' % (j, cusumStats[-1][j], stdEsts[j]))
