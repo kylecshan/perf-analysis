@@ -50,36 +50,23 @@ def regimeTimeseries(y, changePts):
         std[a:b] = trimStd(y[a:b])
     return mean, std
         
-def mergeChangePts(x):
-    '''Find consecutive chunks of changepoints. Decide which one is the
-    true changepoint by the mode, and break ties by taking the first.
+def mergeChangePts(cps, voteThreshold=2):
+    '''Given a list of list of changepoints, consolidate into a
+    master set of changepoints.
     '''
-    x = sorted(x)
-    chunks = []
-    tempChunk = [x[0]]
-    current = x[0]
-    i = 1
-    while i<len(x):
-        if x[i] == current or x[i] == current+1:
-            tempChunk.append(x[i])
-        else:
-            chunks.append(tempChunk)
-            tempChunk = [x[i]]
-            
-        current = x[i]
-        i += 1
-    chunks.append(tempChunk)
-    
-    output = []
-    for chunk in chunks:
-        truePt = chunk[0]
-        for y in chunk:
-            if chunk.count(y) > chunk.count(truePt):
-                truePt = y
-        output.append(truePt)
-    return output
-        
-        
+    # Get max index voted for
+    n = max([max(y) for y in cps]) + 1
+    votes = [sum([i in cps[k] for k in range(len(cps))]) for i in range(n)]
+    locks = [i for i in range(n) if votes[i] >= voteThreshold]
+    rest = [i for i in range(n) 
+            if votes[i] > 0
+            and i not in locks
+            and i+1 not in locks 
+            and i-1 not in locks]
+    for i in reversed(rest):
+        if i-1 in rest:
+            rest.remove(i)
+    return sorted(locks + rest)
         
         
         
