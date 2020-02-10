@@ -49,7 +49,21 @@ def regimeTimeseries(y, changePts):
         mean[a:b] = trimMean(y[a:b])
         std[a:b] = trimStd(y[a:b])
     return mean, std
-        
+               
+# def regimeTimeseries2(x, y, changePts):
+#     n = len(y)
+#     m = len(changePts)
+#     newX = np.zeros(2*m)
+#     mean = np.zeros(2*m)
+#     std = np.zeros(2*m)
+#     for i in range(m):
+#         a = changePts[i]
+#         b = changePts[i+1] if i < m-1 else n
+#         newX[2*i], newX[2*i+1] = a, b-1
+#         mean[2*i] = mean[2*i+1] = trimMean(y[a:b])
+#         std[2*i] = std[2*i+1] = trimStd(y[a:b])
+#     return newX, mean, std
+
 def mergeChangePts(cps, voteThreshold=2):
     '''Given a list of list of changepoints, consolidate into a
     master set of changepoints.
