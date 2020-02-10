@@ -68,6 +68,22 @@ def mergeChangePts(cps, voteThreshold=2):
             rest.remove(i)
     return sorted(locks + rest)
         
+def printEvents(events, mostRecent, recency):
+    '''events is a dictionary with keys that are datetime objects,
+    and values which are dictionaries of (test case):(timer)
+    '''
+    for d in events.keys():
+        c0 = None
+        if mostRecent - d <= dt.timedelta(recency):
+            ds = d.strftime('%m/%d/%Y')
+            print(ds+':')
+            for c, t in events[d].items():
+                if c == c0:
+                    print('    '+''.join([' ' for _ in c])+'  '+t)
+                else:
+                    print('    '+c+': '+t)
+                c0 = c
+    return {d: v for d, v in events.items() if mostRecent - d <= dt.timedelta(recency)}
         
         
         
