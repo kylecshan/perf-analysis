@@ -3,16 +3,16 @@ import pandas as pd
 from scipy.stats import t
 from utils import *
     
-def weightedStd(priorStd, priorN, x):
-    """Weighted average of a prior estimate of std and std of current sample
-    """
-    n = len(x)
-    if n < 4:
-        return priorStd
+# def weightedStd(priorStd, priorN, x):
+#     """Weighted average of a prior estimate of std and std of current sample
+#     """
+#     n = len(x)
+#     if n < 4:
+#         return priorStd
     
-    std = trimStd(x)
-    postStd = (priorN * priorStd + n * std) / (priorN + n)
-    return postStd
+#     std = trimStd(x)
+#     postStd = (priorN * priorStd + n * std) / (priorN + n)
+#     return postStd
 
 def trimmedStats(x, end=0):
     return trimMean(x, end=0), trimStd(x, end=0)**2

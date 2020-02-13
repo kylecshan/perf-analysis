@@ -2,7 +2,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import numpy as np
 
-def trim(x, p, end):
+def trim(x, p=.125, end=0):
     # Trim most recent observations
     if len(x) < 3:
         return x
@@ -15,10 +15,10 @@ def trim(x, p, end):
     keep = [i for i in range(n) if dev[i] < 2 or i in order[:n-n_remove]] 
     return xt[keep]
 
-def trimMean(x, p=.125, end=2):
+def trimMean(x, p=.125, end=0):
     return trim(x, p, end).mean()
 
-def trimStd(x, p=.125, end=2):
+def trimStd(x, p=.125, end=0):
     return trim(x, p, end).std()
     
 # def plotRegimes(dates, values, changePts, ax):
