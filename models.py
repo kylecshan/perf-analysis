@@ -4,7 +4,7 @@ from scipy.stats import t as tdist
 from basicstats import *
 from utils import *
 
-def glrmean(x, signif, minRegime, num_test=4):
+def glrmean(x, signif, min_regime, num_test=4):
     '''
     For each potential split point in a time series, perform a generalized
     likelihood test for a difference in the mean (equivalent to t-test for normal)
@@ -25,17 +25,18 @@ def glrmean(x, signif, minRegime, num_test=4):
                 change between i-1 and i)
         stats : t-stats associated with chgPts
     '''
+    x = make_numpy(x)
     chgPts = []
     stats = []
     n = len(x)
-    if n <= minRegime+1:
+    if n <= min_regime+1:
         return [], []
     
     # Performing (n-minRegime) t-tests; apply Bonferroni correction
     threshold = tdist.isf(signif/(2*num_test), df=n-2)
     # To save time, only check a few largest jumps in absolute value
-    largest_jumps = minRegime + np.argsort(
-        [np.abs(x[i]-x[i-1]) for i in range(minRegime, n)]
+    largest_jumps = min_regime + np.argsort(
+        [np.abs(x[i]-x[i-1]) for i in range(min_regime, n)]
     )[-num_test:]
     for k in largest_jumps:
         T = ttest(x[:k], x[k:])
@@ -81,22 +82,23 @@ def glrmean(x, signif, minRegime, num_test=4):
         
 # Helper class for changepoint finder.
 class VoteHistory:
-    def __init__(self, numVotes):
-        self.votes = [set() for _ in range(numVotes)]
-    def insert(self, voteList):
-        self.votes.append(set(voteList))
+    def __init__(self, num_votes):
+        self.votes = [set() for _ in range(num_votes)]
+    def insert(self, vote_list):
+        self.votes.append(set(vote_list))
         self.votes.pop(0)
     def result(self):
         unanimous = set.intersection(*self.votes)
         return None if unanimous == set() else min(unanimous)
     
-def findChangePts(x, threshold=0.0001, minRegime=1, minAgree=3, verbose=False):
+def find_chgpts(x, threshold=0.0001, min_regime=1, min_agree=3, verbose=False):
     '''
     Apply changepoint detection method sequentially
     Inputs:
         x        : time series input
         threshold: threshold value to pass into the underlying model
-        minRegime: minimum regime length (observations between changepoints) to allow
+        min_regime: minimum regime length (observations between changepoints) to allow
+        min_agree: minimum consecutive agreeing detections to determine a changepoint
         method   : test for 'mean' or 'var'
         verbse   : print some output while using
     Outputs:
@@ -105,25 +107,26 @@ def findChangePts(x, threshold=0.0001, minRegime=1, minAgree=3, verbose=False):
                    (a changepoint may not be detected until several observations after
                    the change)
     '''
+    x = make_numpy(x)
     n = len(x)
-    if n < minRegime+1:
+    if n < min_regime+1:
         return [0], [0]
     
-    changePts = [0] # Identified changepoints
-    detectPts = [0] # When each corresponding changepoint is detected
-    votes = VoteHistory(minAgree) # Require a few consecutive detections of the same changepoint
+    chgpts = [0]    # Identified changepoints
+    detpts = [0]    # When each corresponding changepoint is detected
+    votes = VoteHistory(min_agree) # Require a few consecutive detections of the same changepoint
     i = 0           # Track the last detected changepoint
     j = i+1         # Consider data up to (but not including) index j
     while j <= n:
         # Find changepoints in x[i:j]
         stat = 0
-        chgPts, stats = glrmean(x[i:j], threshold, minRegime)
-        votes.insert(chgPts)
-        chgPt = votes.result()
-        if chgPt is not None:
-            i += chgPt
-            changePts.append(i)
-            detectPts.append(j-1)
+        vote_list, stats = glrmean(x[i:j], threshold, min_regime)
+        votes.insert(vote_list)
+        chgpt = votes.result()
+        if chgpt is not None:
+            i += chgpt
+            chgpts.append(i)
+            detpts.append(j-1)
             if verbose:
                 print('At idx %d, changepoint detected at idx %d' % (j-1, i))
             
@@ -131,4 +134,4 @@ def findChangePts(x, threshold=0.0001, minRegime=1, minAgree=3, verbose=False):
             j = i+1
         else:
             j += 1
-    return changePts, detectPts
+    return chgpts, detpts

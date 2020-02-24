@@ -1,23 +1,24 @@
 import datetime as dt
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import warnings
 from IPython.display import HTML, clear_output
                
-def mergeChangePts(cps, voteThreshold=2):
+def merge_chgpts(cps, vote_threshold=2):
     '''Given a list of list of changepoints, consolidate into a
     master set of changepoints. First, keep changepoints that multiple lists
     agree on. Of the remaining, for each group of consecutive changepoints, pick
     the earliest one. Output will have no consecutive changepoints.
     Input:
-        cps          : list of lists of detected changepoints
-        voteThreshold: number of lists that must agree for a changepoint to be
+        cps           : list of lists of detected changepoints
+        vote_Threshold: number of lists that must agree for a changepoint to be
                          automatically voted in
     '''
     # Get max index voted for
     n = max([max(y) for y in cps]) + 1
     votes = [sum([i in cps[k] for k in range(len(cps))]) for i in range(n)]
-    locks = [i for i in range(n) if votes[i] >= voteThreshold]
+    locks = [i for i in range(n) if votes[i] >= vote_threshold]
     rest = [i for i in range(n) 
             if votes[i] > 0
             and i not in locks
@@ -28,23 +29,23 @@ def mergeChangePts(cps, voteThreshold=2):
             rest.remove(i)
     return sorted(locks + rest)
         
-def printEvents(events, mostRecent, recency):
+def print_events(events, most_recent, recency):
     '''events is a dictionary with keys that are datetime objects,
     and values which are dictionaries of (test case):(timer)
     '''
     for date in events.keys():
-        if mostRecent - date <= dt.timedelta(recency):
+        if most_recent - date <= dt.timedelta(recency):
             datestr = date.strftime('%m/%d/%Y')
             print(datestr+':')
             for case, names in events[date].items():
-                firstName = True
+                first_name = True
                 for name in names:
-                    if firstName:
+                    if first_name:
                         print('    '+case+': '+name)
                     else:
                         print('    '+''.join([' ' for _ in case])+'  '+name)
-                    firstName = False
-    return {d: v for d, v in events.items() if mostRecent - d <= dt.timedelta(recency)}
+                    first_name = False
+    return {d: v for d, v in events.items() if most_recent - d <= dt.timedelta(recency)}
         
 # https://stackoverflow.com/questions/27934885/how-to-hide-code-from-cells-in-ipython-notebook-visualized-with-nbviewer
 def hide_code_button():
@@ -86,6 +87,16 @@ def check_config(config):
         warnings.warn('Extraneous config fields: ' + str(extra))
     return
         
-        
+def make_numpy(*args):
+    def make_one_numpy(x):
+        if isinstance(x, pd.Series) or isinstance(x, pd.DataFrame):
+            x = x.to_numpy()
+        if isinstance(x, list) or isinstance(x, tuple):
+            x = np.array(x)
+        return x
+    if len(args) == 1:
+        return make_one_numpy(args[0])
+    else:
+        return tuple(make_one_numpy(x) for x in args)
         
         
