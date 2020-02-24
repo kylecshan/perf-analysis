@@ -50,39 +50,43 @@ def trimmedStats(x, end=0):
     '''
     return trimMean(x, end=0), trimStd(x, end=0)**2
 
-def ttest(xl, xr, with_pval=False):
+def ttest(x1, x2=None, with_pval=False):
     '''
     Get t-statistic for difference in two independent samples with unequal variance.
     Useful if the means of the samples are roughly normal (e.g. data is normal, or
     sample size large enough, say 30+)
     Input:
-        xl, xr: samples to compare
+        x1, x2: samples to compare. If x2 is None, performs one-sample t-test of mean==0
     '''
-    lmean, lvar = trimmedStats(xl)
-    rmean, rvar = trimmedStats(xr)
-    k, n = len(xl), len(xl)+len(xr)
-    if n <= 2:
-        return (0, 1) if with_pval else 0
-    
-    rss = (k-1)*lvar + (n-k-1)*rvar
-    sigma = np.sqrt(rss/(n-2))
-    tstat = np.sqrt(k*(n-k)/n)*(lmean-rmean)/sigma
+    lmean, lvar = trimmedStats(x1)
+    if x2 is None:
+        n = len(x1)
+        tstat = lmean / np.sqrt(lvar/(n-2))
+    else:
+        rmean, rvar = trimmedStats(x2)
+        k, n = len(x1), len(x1)+len(x2)
+        if n <= 2:
+            return (0, 1) if with_pval else 0
+
+        rss = (k-1)*lvar + (n-k-1)*rvar
+        sigma = np.sqrt(rss/(n-2))
+        tstat = np.sqrt(k*(n-k)/n)*(lmean-rmean)/sigma
     pval = 2*tdist.cdf(-np.abs(tstat), n-2)
     return (tstat, pval) if with_pval else tstat
 
-def permtest(xl, xr, N = 1000, stat = np.mean):
+def permtest(x1, x2, N = 1000, stat = np.mean):
     '''
     Apply permutation test of a given statistic on two samples. Robust to non-normality
     but takes longer to run than a t-test.
     Inputs:
-        xl, xr: samples to compare
+        x1, x2: samples to compare
         N     : number of random permutations to generate
         stat  : function which computes test statistic (e.g. mean, median)
     '''
-    xl, xr = trim(xl), trim(xr)
-    actual = stat(xl) - stat(xr)
-    combined = np.concatenate((xl, xr))
-    nl, nr = len(xl), len(xr)
+    x1, x2 = trim(x1), trim(x2)
+    actual = stat(x1) - stat(x2)
+    combined = np.concatenate((x1, x2))
+    nl, nr = len(xl), len(x2)
     def perm_stat(x):
         x = np.random.permutation(x)
         return stat(x[:nl]) - stat(x[nl:])
