@@ -1,29 +1,8 @@
 import datetime as dt
 import matplotlib.pyplot as plt
 import numpy as np
-from IPython.display import HTML
-
-def trim(x, p=.125, end=0):
-    '''
-    Remove observations that may be outliers - suspiciously far from the average.
-    At most [floor(len(x)*p) + end] points are removed.
-    Inputs:
-        x  : data to trim
-        p  : proportion of data to remove
-        end: number of data points at the end of x to ignore
-    '''
-    # Trim most recent observations
-    if len(x) < 3:
-        return x
-    n = max(3, len(x)-end)
-    xt = x[:n]
-    # Trim most extreme observations if more than 2std away
-    n_remove = int(np.floor(n*p))
-    dev = np.abs(xt - xt.mean())/xt.std()
-    order = np.argsort(np.abs(xt - xt.mean()))
-    keep = [i for i in range(n) if dev[i] < 2 or i in order[:n-n_remove]] 
-    return xt[keep]
-
+import warnings
+from IPython.display import HTML, clear_output
                
 def mergeChangePts(cps, voteThreshold=2):
     '''Given a list of list of changepoints, consolidate into a
@@ -53,17 +32,18 @@ def printEvents(events, mostRecent, recency):
     '''events is a dictionary with keys that are datetime objects,
     and values which are dictionaries of (test case):(timer)
     '''
-    for d in events.keys():
-        c0 = None
-        if mostRecent - d <= dt.timedelta(recency):
-            ds = d.strftime('%m/%d/%Y')
-            print(ds+':')
-            for c, t in events[d].items():
-                if c == c0:
-                    print('    '+''.join([' ' for _ in c])+'  '+t)
-                else:
-                    print('    '+c+': '+t)
-                c0 = c
+    for date in events.keys():
+        if mostRecent - date <= dt.timedelta(recency):
+            datestr = date.strftime('%m/%d/%Y')
+            print(datestr+':')
+            for case, names in events[date].items():
+                firstName = True
+                for name in names:
+                    if firstName:
+                        print('    '+case+': '+name)
+                    else:
+                        print('    '+''.join([' ' for _ in case])+'  '+name)
+                    firstName = False
     return {d: v for d, v in events.items() if mostRecent - d <= dt.timedelta(recency)}
         
 # https://stackoverflow.com/questions/27934885/how-to-hide-code-from-cells-in-ipython-notebook-visualized-with-nbviewer
@@ -89,6 +69,22 @@ def hide_code_button():
         </form>
     ''')        
 
+def check_config(config):
+    fields = ('threshold', 'recency', 'nproc', 'metadata', 'cases', 'names', 'timers')
+    missing = []
+    for field in fields:
+        if field not in config.keys():
+            missing.append(field)
+    if len(missing) > 0:
+        raise KeyError('Config file missing fields: ' + str(missing))
+        
+    extra = []
+    for field in config.keys():
+        if field not in fields:
+            extra.append(field)
+    if len(extra) > 0:
+        warnings.warn('Extraneous config fields: ' + str(extra))
+    return
         
         
         

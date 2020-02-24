@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import t
+from scipy.stats import t as tdist
 from basicstats import *
 from utils import *
 
-def glrmean(x, signif, minRegime=3):
+def glrmean(x, signif, minRegime, num_test=4):
     '''
     For each potential split point in a time series, perform a generalized
     likelihood test for a difference in the mean (equivalent to t-test for normal)
@@ -17,28 +17,32 @@ def glrmean(x, signif, minRegime=3):
         minRegime: minimum distance from the beginning to consider as a changepoint
                    (e.g. if minRegime = 3, don't consider x[0], x[1], or x[2] as
                    potential changepoints)
+        num_test : rank the first-order differences and only consider this many of
+                   the largest differences (by absolute value)
     Output:
-        chgPt: None if no significant changepoint detected, otherwise the index of
-               the detected changepoint (where i is a changepoint iff there was a
-               change between i-1 and i)
-        stat : Highest t-stat detected (this is over the threshold iff chgPt is
-               not None). If not enough data, then 0.
+        chgPts: None if no significant changepoint detected, otherwise the index of
+                the detected changepoints (where i is a changepoint iff there was a
+                change between i-1 and i)
+        stats : t-stats associated with chgPts
     '''
-    stat = 0
-    chgPt = None
+    chgPts = []
+    stats = []
     n = len(x)
-    if n <= minRegime:
-        return chgPt, 0
+    if n <= minRegime+1:
+        return [], []
     
     # Performing (n-minRegime) t-tests; apply Bonferroni correction
-    threshold = t.isf(signif/(2*(n-minRegime)), df=n-2)
-    for k in range(minRegime, n):
+    threshold = tdist.isf(signif/(2*num_test), df=n-2)
+    # To save time, only check a few largest jumps in absolute value
+    largest_jumps = minRegime + np.argsort(
+        [np.abs(x[i]-x[i-1]) for i in range(minRegime, n)]
+    )[-num_test:]
+    for k in largest_jumps:
         T = ttest(x[:k], x[k:])
-        if np.abs(T) > stat:
-            stat = np.abs(T)
-            if np.abs(T) >= threshold: 
-                chgPt = k
-    return chgPt, stat
+        if np.abs(T) >= threshold: 
+            chgPts.append(k)
+            stats.append(T)
+    return chgPts, stats
 
 # def glrvar(x, threshold, minSample = 6):
 #     """
@@ -75,8 +79,18 @@ def glrmean(x, signif, minRegime=3):
 #                 chgPt = k
 #     return chgPt, best
         
+# Helper class for changepoint finder.
+class VoteHistory:
+    def __init__(self, numVotes):
+        self.votes = [set() for _ in range(numVotes)]
+    def insert(self, voteList):
+        self.votes.append(set(voteList))
+        self.votes.pop(0)
+    def result(self):
+        unanimous = set.intersection(*self.votes)
+        return None if unanimous == set() else min(unanimous)
     
-def findChangePts(x, threshold=6, minRegime = 3, method='mean', verbose=False):
+def findChangePts(x, threshold=0.0001, minRegime=1, minAgree=3, verbose=False):
     '''
     Apply changepoint detection method sequentially
     Inputs:
@@ -94,20 +108,18 @@ def findChangePts(x, threshold=6, minRegime = 3, method='mean', verbose=False):
     n = len(x)
     if n < minRegime+1:
         return [0], [0]
-    assert(method in ['mean', 'var'])
     
     changePts = [0] # Identified changepoints
     detectPts = [0] # When each corresponding changepoint is detected
+    votes = VoteHistory(minAgree) # Require a few consecutive detections of the same changepoint
     i = 0           # Track the last detected changepoint
     j = i+1         # Consider data up to (but not including) index j
     while j <= n:
         # Find changepoints in x[i:j]
         stat = 0
-        if method == 'mean':
-            chgPt, stat = glrmean(x[i:j], threshold, minRegime)
-#         elif method == 'var':
-#             chgPt, _ = glrvar(x[i:j], threshold, minRegime)
-        
+        chgPts, stats = glrmean(x[i:j], threshold, minRegime)
+        votes.insert(chgPts)
+        chgPt = votes.result()
         if chgPt is not None:
             i += chgPt
             changePts.append(i)
