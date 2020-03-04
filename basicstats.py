@@ -132,6 +132,26 @@ def regime_ts(y, changePts, std_error=False, alpha=0.01):
         lower[a:b] = mean[a:b] - t_crit*std
     return mean, upper, lower
 
+def add_regime_stats(df, changePts, std_error=False, alpha=0.01):
+    '''
+    Take a dataframe with a 'time' column, and append the output of regime_ts
+    '''
+    mean, upper, lower = regime_ts(df['time'], changePts)
+    temp = {'mean': mean, 'upper': upper, 'lower': lower}
+    return pd.concat((df, pd.DataFrame(temp)), axis=1)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

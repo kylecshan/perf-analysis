@@ -5,29 +5,29 @@ import pandas as pd
 import warnings
 from IPython.display import HTML, clear_output
                
-def merge_chgpts(cps, vote_threshold=2):
-    '''Given a list of list of changepoints, consolidate into a
-    master set of changepoints. First, keep changepoints that multiple lists
-    agree on. Of the remaining, for each group of consecutive changepoints, pick
-    the earliest one. Output will have no consecutive changepoints.
-    Input:
-        cps           : list of lists of detected changepoints
-        vote_Threshold: number of lists that must agree for a changepoint to be
-                         automatically voted in
-    '''
-    # Get max index voted for
-    n = max([max(y) for y in cps]) + 1
-    votes = [sum([i in cps[k] for k in range(len(cps))]) for i in range(n)]
-    locks = [i for i in range(n) if votes[i] >= vote_threshold]
-    rest = [i for i in range(n) 
-            if votes[i] > 0
-            and i not in locks
-            and i+1 not in locks 
-            and i-1 not in locks]
-    for i in reversed(rest):
-        if i-1 in rest:
-            rest.remove(i)
-    return sorted(locks + rest)
+# def merge_chgpts(cps, vote_threshold=2):
+#     '''Given a list of list of changepoints, consolidate into a
+#     master set of changepoints. First, keep changepoints that multiple lists
+#     agree on. Of the remaining, for each group of consecutive changepoints, pick
+#     the earliest one. Output will have no consecutive changepoints.
+#     Input:
+#         cps           : list of lists of detected changepoints
+#         vote_Threshold: number of lists that must agree for a changepoint to be
+#                          automatically voted in
+#     '''
+#     # Get max index voted for
+#     n = max([max(y) for y in cps]) + 1
+#     votes = [sum([i in cps[k] for k in range(len(cps))]) for i in range(n)]
+#     locks = [i for i in range(n) if votes[i] >= vote_threshold]
+#     rest = [i for i in range(n) 
+#             if votes[i] > 0
+#             and i not in locks
+#             and i+1 not in locks 
+#             and i-1 not in locks]
+#     for i in reversed(rest):
+#         if i-1 in rest:
+#             rest.remove(i)
+#     return sorted(locks + rest)
         
 def print_events(events, most_recent, recency):
     '''events is a dictionary with keys that are datetime objects,

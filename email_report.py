@@ -2,7 +2,7 @@
 import numpy as np
 from models import find_chgpts, glrmean
 
-def changepoint_test(wtimes, alpha=0.0001):
+def changepoint_test(wtimes, alpha=0.005):
     '''
     Use changepoint detection model to determine if latest observation(s) indicate a change
     in performance. Input should be sorted chronologically.
@@ -18,13 +18,13 @@ def changepoint_test(wtimes, alpha=0.0001):
     '''
     wt = np.asarray(wtimes, dtype=np.float64)
     # Find latest changepoint based on previously known information
-    chgpts, detpts, votes = find_chgpts(wt[:-1], alpha=alpha, num_test=None)
+    chgpts, detpts, votes = find_chgpts(wt[:-1], alpha=alpha)
     
     # Only consider data since the latest previously-detected changepoint
     last_known = chgpts[-1]
     wt_recent = wt[last_known:]
     
-    vote_list, tstats = glrmean(wt_recent, alpha=alpha, num_test=None)
+    vote_list, tstats = glrmean(wt_recent, alpha=alpha)
     perf_drops = [vote_list[i] for i, tstat in enumerate(tstats) if tstat > 0]
     
     votes.push(perf_drops)

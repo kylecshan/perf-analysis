@@ -62,7 +62,7 @@ class VoteHistory:
     def reset(self):
         self.votes = [set() for _ in self.votes]
     
-def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, verbose=False):
+def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, lookback=30, verbose=False):
     '''
     Apply changepoint detection method sequentially
     Inputs:
@@ -71,6 +71,8 @@ def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, verbose=False):
         min_agree: minimum consecutive agreeing detections to determine a changepoint
         num_test : only test this many of the largest changes - can save some time by
                    not considering every single data point as a potential changepoint
+        lookback : max number of data points to look backward in time (avoid hyper-
+                   sensitivity as sample size grows)
         verbse   : print some output while using
     Outputs:
         changePts: list of detected changepoints (indices of x)
@@ -87,23 +89,30 @@ def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, verbose=False):
     chgpts = [0]    # Identified changepoints
     detpts = [0]    # When each corresponding changepoint is detected
     votes = VoteHistory(min_agree) # Require a few consecutive detections of the same changepoint
-    i = 0           # Track the last detected changepoint
+    i = 0           # Track starting point of current data under consideration
     j = i+1         # Consider data up to (but not including) index j
     while j <= n:
         # Find changepoints in x[i:j]
         vote_list, stats = glrmean(x[i:j], alpha, num_test)
-        votes.push(vote_list)
+        votes.push([vote+i for vote in vote_list])
         chgpt = votes.result()
         if chgpt is not None:
-            i += chgpt
-            chgpts.append(i)
+            i = chgpt
+            chgpts.append(chgpt)
             detpts.append(j-1)
             if verbose:
                 print('At idx %d, changepoint detected at idx %d' % (j-1, i))
             
-            # Now that we know i is a change point, go back to i
-            j = i+1
+            # Now that we know i is a change point, go back to there
+            j = chgpts[-1]+1
             votes.reset()
         else:
             j += 1
+            i = max(i, j-lookback)
     return chgpts, detpts, votes
+
+# Used for parallelizing
+def single_ts_chgpts(my_input):
+    key, data, threshold = my_input
+    pts = find_chgpts(data['time'], alpha=threshold)[0]
+    return key, pts
