@@ -13,7 +13,7 @@ def changepoint_test(wtimes, alpha=0.005):
         'fail' if there is a changepoint associated with a significant performance drop,
                which has been detected for a few consecutive days
         'warn' if there is a changepoint associated with a significant performance drop,
-               but we are waiting for additional confirmation (could be an outlier)
+               but we are waiting for more observations to confirm
         'pass' otherwise (no performance drops detected)
     '''
     wt = np.asarray(wtimes, dtype=np.float64)
