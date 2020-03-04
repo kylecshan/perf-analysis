@@ -52,15 +52,20 @@ class VoteHistory:
     detected by several sources, and determines whether they agree on any.
     '''
     def __init__(self, num_votes):
-        self.votes = [set() for _ in range(num_votes)]
-    def push(self, vote_list):
-        self.votes.append(set(vote_list))
+        self.votes = [dict() for _ in range(num_votes)]
+    def push(self, vote_dict):
+        self.votes.append(vote_dict)
         self.votes.pop(0)
     def result(self):
-        unanimous = set.intersection(*self.votes)
-        return None if unanimous == set() else min(unanimous)
+        unanimous = set.intersection(*[set(d.keys()) for d in self.votes])
+        if len(unanimous) == 0:
+            return None
+        else:
+            options = [(k, sum(d[k] for d in self.votes)) for k in unanimous]
+            best_option = max(options, key=lambda x: np.abs(x[1]))
+            return best_option[0]
     def reset(self):
-        self.votes = [set() for _ in self.votes]
+        self.votes = [dict() for _ in self.votes]
     
 def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, lookback=30, verbose=False):
     '''
@@ -80,21 +85,21 @@ def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, lookback=30, verbose=F
                    (a changepoint may not be detected until several observations after
                    the change)
     '''
+    chgpts = [0]    # Identified changepoints
+    detpts = [0]    # When each corresponding changepoint is detected
+    votes = VoteHistory(min_agree)
+    
     x = make_numpy(x)
     n = len(x)
     if n <= 2:
-        return [0], [0]
+        return chgpts, detpts, votes
         
-    
-    chgpts = [0]    # Identified changepoints
-    detpts = [0]    # When each corresponding changepoint is detected
-    votes = VoteHistory(min_agree) # Require a few consecutive detections of the same changepoint
     i = 0           # Track starting point of current data under consideration
     j = i+1         # Consider data up to (but not including) index j
     while j <= n:
         # Find changepoints in x[i:j]
         vote_list, stats = glrmean(x[i:j], alpha, num_test)
-        votes.push([vote+i for vote in vote_list])
+        votes.push({vote+i: stat for vote, stat in zip(vote_list, stats)})
         chgpt = votes.result()
         if chgpt is not None:
             i = chgpt

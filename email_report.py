@@ -25,7 +25,7 @@ def changepoint_test(wtimes, alpha=0.005):
     wt_recent = wt[last_known:]
     
     vote_list, tstats = glrmean(wt_recent, alpha=alpha)
-    perf_drops = [vote_list[i] for i, tstat in enumerate(tstats) if tstat > 0]
+    perf_drops = {vote+last_known: tstat for vote, tstat in zip(vote_list, tstats) if tstat > 0}
     
     votes.push(perf_drops)
     if votes.result() is not None:
