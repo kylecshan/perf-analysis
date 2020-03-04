@@ -18,13 +18,13 @@ def changepoint_test(wtimes, alpha=0.0001):
     '''
     wt = np.asarray(wtimes, dtype=np.float64)
     # Find latest changepoint based on previously known information
-    chgpts, detpts, votes = find_chgpts(wt[:-1], alpha=alpha)
+    chgpts, detpts, votes = find_chgpts(wt[:-1], alpha=alpha, num_test=None)
     
     # Only consider data since the latest previously-detected changepoint
     last_known = chgpts[-1]
     wt_recent = wt[last_known:]
     
-    vote_list, tstats = glrmean(wt_recent, alpha=alpha)
+    vote_list, tstats = glrmean(wt_recent, alpha=alpha, num_test=None)
     perf_drops = [vote_list[i] for i, tstat in enumerate(tstats) if tstat > 0]
     
     votes.push(perf_drops)

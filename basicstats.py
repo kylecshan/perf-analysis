@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.stats import t as tdist, median_absolute_deviation as mad
 from utils import make_numpy
 
-def trim(x, p=.125, end=0, threshold=3):
+def trim(x, p, end=0, threshold=3):
     '''
     Remove observations that may be outliers - suspiciously far from the average.
     At most [floor(len(x)*p) + end] points are removed.
@@ -25,7 +25,7 @@ def trim(x, p=.125, end=0, threshold=3):
     keep = [i for i in range(n) if dev[i] < threshold or i in order[:n-n_remove]] 
     return x[keep]
 
-def trim_mean(x, p=.125, end=0):
+def trim_mean(x, p=.1, end=0):
     '''
     Trim a series to remove egregious outliers, and then return the mean.
     Input:
@@ -35,7 +35,7 @@ def trim_mean(x, p=.125, end=0):
     '''
     return trim(x, p, end).mean()
 
-def trim_std(x, p=.125, end=0):
+def trim_std(x, p=.1, end=0):
     '''
     Trim a series to remove egregious outliers, and then return the standard deviation.
     Inputs:
