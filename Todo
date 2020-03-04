@@ -1,2 +1,3 @@
 Docs
-Log model
+Update email report function to give useful email output
+Generate comparisons for report, usefulness of each feature (trimmed stats, consecutive votes, better mean/std using data since last changepoint)

@@ -62,20 +62,21 @@ def ttest(x1, x2=None, with_pval=False):
     Input:
         x1, x2: samples to compare. If x2 is None, performs one-sample t-test of mean==0
     '''
-    x1, x2 = make_numpy(x1, x2)
+    x1 = make_numpy(x1)
     lmean, lvar = trimmed_stats(x1, var=True)
     if x2 is None:
         n = len(x1)
         tstat = lmean / np.sqrt(lvar/(n-2))
     else:
+        x2 = make_numpy(x2)
         rmean, rvar = trimmed_stats(x2, var=True)
         k, n = len(x1), len(x1)+len(x2)
         if n <= 2:
             return (0, 1) if with_pval else 0
 
         rss = (k-1)*lvar + (n-k-1)*rvar
-        sigma = np.sqrt(rss/(n-2))
-        tstat = np.sqrt(k*(n-k)/n)*(lmean-rmean)/sigma
+        sigma = np.sqrt(rss/(n-2)) + 1e-8
+        tstat = np.sqrt(k*(n-k)/n)*(rmean-lmean)/sigma
     pval = 2*tdist.cdf(-np.abs(tstat), n-2)
     return (tstat, pval) if with_pval else tstat
 
@@ -100,7 +101,7 @@ def permtest(x1, x2, N = 1000, stat = np.mean):
     pval = (1 + np.sum(np.abs(samples) >= np.abs(actual))) / (N+1)
     return pval
     
-def regime_ts(y, changePts, std_error=False):
+def regime_ts(y, changePts, std_error=False, alpha=0.01):
     '''
     Given a timeseries y and a set of changepoints, return three timeseries with the
     same length as y, containing the mean and upper/lower bounds
@@ -109,6 +110,7 @@ def regime_ts(y, changePts, std_error=False):
         changePts: sorted list of indices of y which are changepoints, 
                      where changePts[0] = 0
         std_error: whether reported std should be std error of the mean
+        alpha    : if std_error, then this controls the significance level of the bounds
     '''
     y = make_numpy(y)
     n = len(y)
@@ -123,7 +125,7 @@ def regime_ts(y, changePts, std_error=False):
         mean[a:b] = avg
         if std_error:
             std /= np.sqrt(b-a)
-            t_crit = tdist.isf(0.01/2, b-a-1)
+            t_crit = tdist.isf(alpha/2, b-a-1)
         else:
             t_crit = 2
         upper[a:b] = mean[a:b] + t_crit*std

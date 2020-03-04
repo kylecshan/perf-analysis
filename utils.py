@@ -71,7 +71,7 @@ def hide_code_button():
     ''')        
 
 def check_config(config):
-    fields = ('threshold', 'recency', 'nproc', 'metadata', 'cases', 'names', 'timers')
+    fields = ('threshold', 'recency', 'json_regex', 'metadata', 'cases', 'names', 'timers')
     missing = []
     for field in fields:
         if field not in config.keys():
@@ -88,15 +88,9 @@ def check_config(config):
     return
         
 def make_numpy(*args):
-    def make_one_numpy(x):
-        if isinstance(x, pd.Series) or isinstance(x, pd.DataFrame):
-            x = x.to_numpy()
-        if isinstance(x, list) or isinstance(x, tuple):
-            x = np.array(x)
-        return x
     if len(args) == 1:
-        return make_one_numpy(args[0])
+        return np.asarray(args[0])
     else:
-        return tuple(make_one_numpy(x) for x in args)
+        return tuple(np.asarray(x) for x in args)
         
         

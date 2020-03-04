@@ -7,13 +7,12 @@ import warnings
 import datetime as dt
 import pandas as pd
 
-def json2dataframe(files, cases, nproc, names, timers, metadata):
+def json2dataframe(files, cases, names, timers, metadata):
     '''
     Extract timer data from json files and output as pandas DataFrame
     Inputs:
         files   : List of .json files
-        cases   : List of test cases
-        nproc   : Number of processes (part of case name)
+        cases   : List of test cases WITH np
         names   : Presentable names of timers
         timers  : Raw names of timers
         metadata: Additional fields to add to output
@@ -31,9 +30,8 @@ def json2dataframe(files, cases, nproc, names, timers, metadata):
             ctestData = json.load(jf)
         
         for case in cases:
-            case_nproc = case+'_np'+str(nproc)
-            if case_nproc in ctestData.keys():
-                info = ctestData[case_nproc]
+            if case in ctestData.keys():
+                info = ctestData[case]
                 if not info['passed']:
                     continue
                 output['case'].append(case)
@@ -43,4 +41,6 @@ def json2dataframe(files, cases, nproc, names, timers, metadata):
                 for name, timer in zip(names, timers):
                     output[name].append(info['timers'].get(timer))
                     
-    return pd.DataFrame(output)
+    output_df = pd.DataFrame(output)
+    output_df.sort_values(by=['date', 'case'], inplace=True)
+    return output_df
