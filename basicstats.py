@@ -20,7 +20,7 @@ def trim(x, p, end=0, threshold=3):
     x = x[:n]
     # Trim most extreme observations if more than [threshold] std away.
     n_remove = int(np.floor(n*p))
-    dev = np.abs(x - np.median(x))/mad(x)
+    dev = np.abs(x - np.median(x))/(mad(x) + 1e-8)
     order = np.argsort(np.abs(x - np.median(x)))
     keep = [i for i in range(n) if dev[i] < threshold or i in order[:n-n_remove]] 
     return x[keep]
@@ -66,7 +66,7 @@ def ttest(x1, x2=None, with_pval=False):
     lmean, lvar = trimmed_stats(x1, var=True)
     if x2 is None:
         n = len(x1)
-        tstat = lmean / np.sqrt(lvar/(n-2))
+        tstat = lmean / (np.sqrt(lvar/(n-2)) + 1e-8)
     else:
         x2 = make_numpy(x2)
         rmean, rvar = trimmed_stats(x2, var=True)
@@ -136,7 +136,7 @@ def add_regime_stats(df, changePts, std_error=False, alpha=0.01):
     '''
     Take a dataframe with a 'time' column, and append the output of regime_ts
     '''
-    mean, upper, lower = regime_ts(df['time'], changePts)
+    mean, upper, lower = regime_ts(df['time'], changePts, std_error, alpha)
     temp = {'mean': mean, 'upper': upper, 'lower': lower}
     return pd.concat((df, pd.DataFrame(temp)), axis=1)
     
