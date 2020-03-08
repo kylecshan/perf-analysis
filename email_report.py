@@ -42,7 +42,7 @@ def changepoint_test(wtimes, alpha=0.005):
         status = 'pass'
        
     # Also compute the mean and standard deviation since the last previously-detected changepoint
-    mu = wt_recent.mean()
-    sig = wt_recent.std()
+    mu = np.exp(wt_recent).mean()
+    sig = np.exp(wt_recent).std()
         
-    return status, np.exp(wt[-1]), np.exp(mu), np.exp(sig)
+    return status, np.exp(wt[-1]), mu, sig
