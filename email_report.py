@@ -17,7 +17,7 @@ def changepoint_test(wtimes, alpha=0.005):
         'pass' otherwise (no performance drops detected)
     '''
     min_agree = 3 # Number of consecutive times a changepoint must be detected
-    num_test = 5  # Consider only the largest changes in timers as potential changepoints
+    num_test = 10  # Consider only the largest changes in timers as potential changepoints
     lookback = 30 # Limit lookback window
     
     wt = np.asarray(wtimes, dtype=np.float64)

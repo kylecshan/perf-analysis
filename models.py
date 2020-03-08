@@ -67,7 +67,7 @@ class VoteHistory:
     def reset(self):
         self.votes = [dict() for _ in self.votes]
     
-def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, lookback=30, verbose=False):
+def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=10, lookback=30, verbose=False):
     '''
     Apply changepoint detection method sequentially
     Inputs:
