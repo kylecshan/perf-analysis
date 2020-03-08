@@ -78,7 +78,7 @@ def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, lookback=30, verbose=F
                    not considering every single data point as a potential changepoint
         lookback : max number of data points to look backward in time (avoid hyper-
                    sensitivity as sample size grows)
-        verbse   : print some output while using
+        verbose  : print some output while using
     Outputs:
         changePts: list of detected changepoints (indices of x)
         detectPts: list of indices at which corresponding changepoints were detected
@@ -119,5 +119,5 @@ def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=5, lookback=30, verbose=F
 # Used for parallelizing
 def single_ts_chgpts(my_input):
     key, data, threshold = my_input
-    pts = find_chgpts(data['time'], alpha=threshold)[0]
+    pts = find_chgpts(data['time'], alpha=threshold, min_agree=3, lookback=30)[0]
     return key, pts

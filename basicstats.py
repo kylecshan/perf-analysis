@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.stats import t as tdist, median_absolute_deviation as mad
 from utils import make_numpy
 
-def trim(x, p, end=0, threshold=3):
+def trim(x, p, threshold=3):
     '''
     Remove observations that may be outliers - suspiciously far from the average.
     At most [floor(len(x)*p) + end] points are removed.
@@ -14,10 +14,9 @@ def trim(x, p, end=0, threshold=3):
         end: number of data points at the end of x to ignore
     '''
     # Trim most recent observations
-    if len(x) - end < np.ceil(1/p):
+    if p == 0 or len(x) < np.ceil(1/p):
         return x
-    n = len(x)-end
-    x = x[:n]
+    n = len(x)
     # Trim most extreme observations if more than [threshold] std away.
     n_remove = int(np.floor(n*p))
     dev = np.abs(x - np.median(x))/(mad(x) + 1e-8)
@@ -25,7 +24,7 @@ def trim(x, p, end=0, threshold=3):
     keep = [i for i in range(n) if dev[i] < threshold or i in order[:n-n_remove]] 
     return x[keep]
 
-def trim_mean(x, p=.1, end=0):
+def trim_mean(x, p=.1):
     '''
     Trim a series to remove egregious outliers, and then return the mean.
     Input:
@@ -33,9 +32,9 @@ def trim_mean(x, p=.1, end=0):
         p  : maximum proportion of data to remove
         end: number of data points to remove from the end of the series
     '''
-    return trim(x, p, end).mean()
+    return trim(x, p).mean()
 
-def trim_std(x, p=.1, end=0):
+def trim_std(x, p=.1):
     '''
     Trim a series to remove egregious outliers, and then return the standard deviation.
     Inputs:
@@ -43,16 +42,16 @@ def trim_std(x, p=.1, end=0):
         p  : maximum proportion of data to remove
         end: number of data points to remove from the end of the series
     '''
-    return trim(x, p, end).std()
+    return trim(x, p).std()
 
-def trimmed_stats(x, end=0, var=True):
+def trimmed_stats(x, p=.1, var=True):
     '''
     Get trimmed mean and std or variance
     '''
     if var:
-        return trim_mean(x, end=0), trim_std(x, end=0)**2
+        return trim_mean(x, p), np.square(trim_std(x, p))
     else:
-        return trim_mean(x, end=0), trim_std(x, end=0)
+        return trim_mean(x, p), trim_std(x, p)
 
 def ttest(x1, x2=None, with_pval=False):
     '''
