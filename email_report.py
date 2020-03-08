@@ -21,6 +21,7 @@ def changepoint_test(wtimes, alpha=0.005):
     lookback = 30 # Limit lookback window
     
     wt = np.asarray(wtimes, dtype=np.float64)
+    wt = np.log(wt)
     
     # Find latest changepoint based on previously known information
     chgpts, detpts, votes = find_chgpts(wt[:-1], alpha, min_agree, num_test, lookback)
@@ -44,4 +45,4 @@ def changepoint_test(wtimes, alpha=0.005):
     mu = wt_recent.mean()
     sig = wt_recent.std()
         
-    return status, wt[-1], mu, sig
+    return status, np.exp(wt[-1]), np.exp(mu), np.exp(sig)
