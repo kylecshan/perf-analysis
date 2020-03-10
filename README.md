@@ -65,3 +65,13 @@ o	Calculate mean of each case + timer between consecutive changepoints
 * Compute and print summary statistics and t-test of the average time difference
 * Define interactive update rules for drop-down menus, and display charts
 
+## Package Information
+This repository uses the following versions of select packages:
+* python 3.7.6
+* numpy 1.17.3
+* pandas 0.25.3
+* plotly 4.5.0
+* scipy 1.3.1
+* ipython 7.11.1
+* ipywidgets 7.5.1
+* multiprocess 0.70.9
