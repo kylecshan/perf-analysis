@@ -99,14 +99,17 @@ def find_chgpts(x, alpha=0.0001, min_agree=3, num_test=10, lookback=30, verbose=
     while j <= n:
         # Find changepoints in x[i:j]
         vote_list, stats = glrmean(x[i:j], alpha, num_test)
-        votes.push({vote+i: stat for vote, stat in zip(vote_list, stats)})
+        new_votes = {vote+i: stat for vote, stat in zip(vote_list, stats)}
+        if verbose:
+            print('At idx %d, found candidates:' % (j-1), new_votes)
+        votes.push(new_votes)
         chgpt = votes.result()
         if chgpt is not None:
             i = chgpt
             chgpts.append(chgpt)
             detpts.append(j-1)
             if verbose:
-                print('At idx %d, changepoint detected at idx %d' % (j-1, i))
+                print('At idx %d, found changepoint:' % (j-1), chgpt)
             
             # Now that we know i is a change point, go back to there
             j = chgpts[-1]+1
