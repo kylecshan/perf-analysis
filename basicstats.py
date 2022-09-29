@@ -1,7 +1,12 @@
 import datetime as dt
 import numpy as np
 import pandas as pd
-from scipy.stats import t as tdist, median_absolute_deviation as mad
+from scipy.stats import t as tdist
+from scipy import version as scipyversion
+if (int(scipyversion.version[0]) == 1) and (int(scipyversion.version[2]) < 9):
+  from scipy.stats import median_absolute_deviation as mad
+else:
+  from scipy.stats import median_abs_deviation as mad
 from utils import make_numpy
 
 def trim(x, p, threshold=3):
